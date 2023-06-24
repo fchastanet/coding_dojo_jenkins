@@ -1,0 +1,92 @@
+// JenkinsfileStep06
+// provide this Jenkinsfile using the path /usr/app/react-dojo
+pipeline {
+    agent {
+        label 'docker'
+    }
+    stages {
+        stage('Docker') {
+            steps {
+                // Bonus: lint the Dockerfile
+                sh  label: 'lint the Dockerfile',
+                    script: 'hadolint Dockerfile'
+
+                // pull the image from the local registry
+                // || true because if the image does not exist yet, it must not fail the step
+                sh  label: 'docker image pull',
+                    script: 'docker pull docker-registry:5000/react-dojo:v1 || true'
+
+                // build the image using pulled image as cache
+                sh  label: 'docker image build',
+                    script: '''docker build -t docker-registry:5000/react-dojo:v1 .'''
+
+                // BEST PRACTICE: unit test your image
+                // following line would fail if node version is not exactly 'v20.2.0'
+                sh  label: 'docker image test',
+                    script: '''
+                        docker run --rm docker-registry:5000/react-dojo:v1 node --version \
+                            | grep -E '^v20.2.0$' || exit 1
+                    '''
+
+                // finally push the image to registry
+                // if nothing has changed, it will be quick too
+                sh  label:'docker image push',
+                    script:'docker push docker-registry:5000/react-dojo:v1'
+
+                sh label:'start project',
+                   script:'''docker-compose up -d --build'''
+            }
+        }
+
+        stage('Lint and Unit tests') {
+            failFast false
+            parallel {
+                stage('Lint') {
+                    steps {
+                        sh label:'lint css',
+                        script:'''docker exec jenkins-dojo-react-project npm run lint:css'''
+                        sh label:'lint js',
+                        script:'''docker exec jenkins-dojo-react-project npm run lint:js'''
+                    }
+                }
+
+                stage('Unit Tests') {
+                    steps {
+                        // env variable `CI=true` avoids npm run test to enter in watch mode
+                        sh label:'run unit tests',
+                           script:'''docker exec -e CI=true jenkins-dojo-react-project npm run test'''
+                    }
+                }
+            }
+        }
+        stage('tar.gz') {
+            steps {
+                sh label:'create tar.gz archive', script:"""
+                    mkdir -p "${WORKSPACE_TMP}" || true
+                    tar -cvzf "${WORKSPACE_TMP}/project.tgz" .
+                    mv "${WORKSPACE_TMP}/project.tgz" "${WORKSPACE}/project.tgz"
+                """
+                archiveArtifacts artifacts: 'project.tgz', followSymlinks: false
+            }
+        }
+    }
+    post {
+        always {
+            sh label:'docker diagnostic', script:'docker ps || true'
+            sh label:'docker-compose diagnostic', script:'docker-compose logs || true'
+            sh label:'stop project', script:'''docker-compose down -v --rmi all'''
+        }
+        success {
+            // check https://plugins.jenkins.io/email-ext/ for other options
+            mail to: 'team-success@example.com',
+              subject: "The Pipeline ${JOB_NAME} succeeded :)",
+              body: 'build successful details'
+        }
+        unsuccessful {
+            // check https://plugins.jenkins.io/email-ext/ for other options
+            mail to: 'team-errors@example.com',
+              subject: "The Pipeline ${JOB_NAME} failed :(",
+              body: 'build failure details'
+        }
+    }
+}

@@ -1,0 +1,21 @@
+---
+version: '3'
+services:
+    client:
+        image: localhost:5000/react-dojo:v1
+        build:
+            context: .
+        command: npm start
+        container_name: jenkins-dojo-react-project
+        # DO NOT UNCOMMENT NEXT LINES
+        # as it could be a normal usage in usual project
+        # we are using "docker in docker" system for local jenkins to work
+        # when pipeline is executed inside the agent container
+        # the . directory is actually a '.' directory on the host 
+        # which is not the same as current one making the build to fail
+        # unexpectedly
+        # 
+        #volumes:
+        #  - .:/usr/src/app/react-dojo    
+        ports:
+            - ${REACT_APP:-3000}:3000

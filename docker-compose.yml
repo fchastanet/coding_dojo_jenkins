@@ -1,0 +1,116 @@
+---
+# docker-compose.yml file based on
+# https://www.jenkins.io/doc/book/installing/docker/
+# https://yallalabs.com/devops/jenkins/how-to-build-custom-jenkins-docker-image/
+version: '3.8'
+services:
+
+    # aim of this service is just to create the following volumes
+    jenkins-data:
+        image: alpine:3.18.0
+        command: /bin/true
+        volumes:
+            - /var/jenkins_home
+
+    docker:
+        image: docker:24-dind
+        container_name: jenkins-dojo-docker
+        restart: unless-stopped
+        privileged: true
+        networks:
+            jenkins:
+                aliases:
+                    - docker
+        command:
+            - --insecure-registry=docker-registry:5000
+        volumes:
+            - ${DOCKER_DATA:-docker-data}:/var/lib/docker
+            - jenkins-docker-certs:/certs/client
+        volumes_from:
+            - jenkins-data
+        ports:
+            - ${DIND_HOST_PORT:-2376}:2376
+
+    jenkins:
+        image: scrasnups/jenkins-dojo-blueocean:v2
+        build:
+            context: .docker/jenkins-master-node
+            dockerfile: Dockerfile
+        container_name: jenkins-dojo-blueocean
+        restart: on-failure
+        environment:
+            DOCKER_HOST: tcp://docker:2376
+            DOCKER_CERT_PATH: /certs/client
+            DOCKER_TLS_VERIFY: 1
+        networks:
+            - jenkins
+        volumes:
+            - ./.ssh:/tmp/.ssh:ro
+            - ./react-dojo:/usr/app/react-dojo:ro
+            - jenkins-docker-certs:/certs/client:ro
+            - ./.docker/jenkins-master-node/init.groovy.d:/var/jenkins_home/init.groovy.d:ro
+        volumes_from:
+            - jenkins-data
+        ports:
+            - ${JENKINS_UI_HOST_PORT:-8080}:8080
+
+    jenkins-agent:
+        image: scrasnups/jenkins-dojo-ssh-agent:v2
+        build:
+            context: .docker/jenkins-agent
+            dockerfile: Dockerfile
+        restart: on-failure
+        user: root
+        container_name: jenkins-dojo-agent
+        depends_on:
+            - jenkins
+            - docker
+            - docker-registry
+        environment:
+            # connect to docker dind
+            DOCKER_HOST: tcp://docker:2376
+            DOCKER_CERT_PATH: /certs/client
+            DOCKER_TLS_VERIFY: 1
+            # Use Docker BuildKit for better caching and faster builds
+            DOCKER_BUILDKIT: 1
+            BUILDKIT_INLINE_CACHE: 1
+            # allows to use docker built images otherwise image layers ids differs
+            COMPOSE_DOCKER_CLI_BUILD: 1
+        volumes:
+            - ./.ssh:/tmp/.ssh:ro
+            - ./react-dojo:/usr/app/react-dojo:ro
+            - jenkins-docker-certs:/certs/client:ro
+        volumes_from:
+            - jenkins-data
+        networks:
+            - jenkins
+
+    docker-registry:
+        image: registry:2.8.2
+        container_name: jenkins-dojo-docker-registry
+        restart: unless-stopped
+        networks:
+            - jenkins
+        ports:
+            - ${DOCKER_REGISTRY_HOST_PORT:-5000}:5000
+        environment:
+            REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /data
+        volumes:
+            - docker-registry:/data
+
+    mail-catcher:
+        image: dockage/mailcatcher:0.8.2
+        container_name: jenkins-dojo-mail-catcher
+        restart: unless-stopped
+        ports:
+            - ${MAIL_UI_HOST_PORT:-1080}:1080
+        networks:
+            - jenkins
+
+volumes:
+    docker-data:
+    jenkins-docker-certs:
+    docker-registry:
+
+networks:
+    jenkins:

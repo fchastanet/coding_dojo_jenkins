@@ -1,0 +1,5 @@
+.env
+react-dojo/node_modules
+.ssh/
+.vscode/settings.json
+~$*

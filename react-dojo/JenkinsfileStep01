@@ -1,0 +1,13 @@
+// JenkinsfileStep01
+// provide this Jenkinsfile using the path /usr/app/react-dojo
+pipeline {
+    agent {
+        label 'docker'
+    }
+    stages {
+        stage('Stage 1') {
+            steps {
+                echo 'Hello world!'
+            }
+        }
+    }
