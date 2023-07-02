@@ -13,7 +13,8 @@ At the end of this coding dojo, the final Jenkinsfile will allow to:
 
 ## Pre-requisites
 
-Send this [white paper template](/docsCodingDojoFacilitator/CodingDojoWhitePaperTemplate.md) to your attendees.
+Send this [white paper template](/docsCodingDojoFacilitator/CodingDojoWhitePaperTemplate.md) to your
+attendees.
 
 ## Coding dojo day
 
