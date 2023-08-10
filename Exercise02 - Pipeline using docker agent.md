@@ -95,7 +95,8 @@ agent {
 ## Step 02 - Use the Snippet generator
 
 Using the [Snippet generator](http://localhost:8080/pipeline-syntax/), add a second stage that
-will build the pipeline named *Exo01* that you created in [Exercise 1](/Exercise01.md)
+will build the pipeline named *Exo01* that you created in
+[Exercise 1](/Exercise01 - Your first inline pipeline.md)
 
 Hint: in snippet generator select the *build* directive sample step
 

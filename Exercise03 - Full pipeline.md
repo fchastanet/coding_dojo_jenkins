@@ -278,7 +278,7 @@ stop the containers.
 **Suggestion**: stop the containers from post directive (please check next tip below).
 
 **Note:** Here we have chosen to use docker-compose commands, but we could have used docker agent like
-we did in [Exercise 02](/Exercise02.md).
+we did in [Exercise 02](/Exercise02 - Pipeline using docker agent.md).
 
 ### Step 03 - Tip : ensure you stop the project properly
 

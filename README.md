@@ -45,7 +45,7 @@ Afterwards, Jenkins UI will ask you for login(`admin`) and password(`admin`).
 If you have ports conflicts, please update the `.env` file accordingly. But please mind to change the
 urls provided in this coding dojo accordingly too.
 
-Let's start by the [Exercise 1](/Exercise01.md). Happy coding dojo !
+Let's start by the [Exercise 1](/Exercise01 - Your first inline pipeline.md). Happy coding dojo !
 
 ## Cleaning at the end of the Dojo
 
