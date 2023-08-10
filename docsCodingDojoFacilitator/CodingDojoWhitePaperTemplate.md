@@ -7,6 +7,18 @@ The main goal is to have fun, meet people and learn!
 What is the topic of this one?
 At this one we’re going to learn and practice **Basic Jenkinsfile**.
 
+A little citation
+> Successful people prove to themselves that they are good at solving problems and that's what
+> motivates them.
+>
+> _Thomas Kunh_
+
+In french:
+> Celui qui réussit se prouve à lui-même qu’il est apte à solutionner des problèmes et c’est ce
+> qui le motive
+>
+> _Thomas Kunh_
+
 ## How does it work?
 
 We use the **Kata** approach, which means the presenter will pose a specific challenge to the participants
